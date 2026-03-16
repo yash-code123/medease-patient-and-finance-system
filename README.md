@@ -422,6 +422,6 @@ This project is licensed under the MIT License.
 
 **⭐ If you found this project helpful, please give it a star! ⭐**
 
-Made with ❤️ by Yash Bhirud | Final Year College Project 2025-2026
+Made by Yash Bhirud | Second Year College Project 2025-2026
 
 </div>
