@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MedEase Hospital Management System</title>
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+
+  <!-- MedEase Stylesheet -->
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<div id="loginScreen">
+  <div class="login-brand">
+    <div class="logo-big">Med<span>Ease</span></div>
+    <p>Multi-Speciality Hospital Management</p>
+  </div>
+  <div id="roleStep">
+    <div class="role-selector">
+      <div class="role-card" data-role="patient" onclick="selectRole('patient')"><div class="role-icon">🧑‍⚕️</div><div class="role-name">Patient</div></div>
+      <div class="role-card" data-role="doctor" onclick="selectRole('doctor')"><div class="role-icon">👨‍⚕️</div><div class="role-name">Doctor</div></div>
+      <div class="role-card" data-role="admin" onclick="selectRole('admin')"><div class="role-icon">🏥</div><div class="role-name">Hospital Admin</div></div>
+    </div>
+    <div class="login-card" id="loginFormCard" style="display:none">
+      <div class="auth-tabs" id="authTabs" style="display:none">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">New? Sign Up</button>
+      </div>
+      <!-- LOGIN -->
+      <div id="loginPanel">
+        <h2 id="loginTitle">Sign In</h2>
+        <div class="login-subtitle" id="loginSubtitle">Enter your credentials</div>
+        <div class="login-field"><label>Username / ID</label><input type="text" id="loginUser" placeholder="Username" autocomplete="off"/></div>
+        <div class="login-field"><label>Password</label><input type="password" id="loginPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <button class="btn-login" onclick="doLogin()">Sign In →</button>
+        <div class="login-error" id="loginError">❌ Invalid credentials. Try again.</div>
+        <div class="login-hint" id="loginHint"></div>
+      </div>
+      <!-- SIGNUP (patient) -->
+      <div id="signupPanel" style="display:none">
+        <h2>🧑‍⚕️ Create Account</h2>
+        <div class="login-subtitle">Register as a new patient</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="login-field"><label>First Name *</label><input type="text" id="su-fname" placeholder="Rajesh"/></div>
+          <div class="login-field"><label>Last Name *</label><input type="text" id="su-lname" placeholder="Kumar"/></div>
+        </div>
+        <div class="login-field"><label>Date of Birth *</label><input type="date" id="su-dob"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="login-field"><label>Gender *</label><select id="su-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+          <div class="login-field"><label>Blood Group</label><select id="su-blood"><option value="">Unknown</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+        </div>
+        <div class="login-field"><label>Phone *</label><input type="tel" id="su-phone" placeholder="9876543210" maxlength="10"/></div>
+        <div class="login-field"><label>Email</label><input type="email" id="su-email" placeholder="you@email.com"/></div>
+        <div class="login-field"><label>Password *</label><input type="password" id="su-pass" placeholder="Min 6 chars"/></div>
+        <div class="login-field"><label>Confirm Password *</label><input type="password" id="su-pass2" placeholder="Re-enter" onkeydown="if(event.key==='Enter')doSignup()"/></div>
+        <button class="btn-login" onclick="doSignup()">✅ Create Account →</button>
+        <div class="login-error" id="signupError">❌ Check your details.</div>
+        <div id="signupSuccess" style="display:none;margin-top:12px;background:rgba(76,175,142,.18);border:1px solid rgba(76,175,142,.4);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:1.4rem">🎉</div>
+          <div style="color:#7ef0c8;font-weight:700;font-size:.95rem" id="signupSuccessMsg">Account created!</div>
+          <div style="color:rgba(255,255,255,.5);font-size:.78rem;margin-top:3px">Use your Patient ID & password to sign in.</div>
+          <button class="btn-login" style="margin-top:10px;background:rgba(76,175,142,.6)" onclick="switchTab('login')">Go to Sign In →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <div>
+      <div class="logo">Med<span>Ease</span></div>
+      <div class="header-sub">Multi-Speciality Hospital</div>
+    </div>
+  </div>
+  <div class="global-search-wrap">
+    <span class="si">🔍</span>
+    <input type="text" placeholder="Search patients, doctors, bills…" oninput="globalSearch(this.value)" onblur="setTimeout(()=>document.getElementById('globalResults').style.display='none',200)"/>
+    <div id="globalResults"></div>
+  </div>
+  <div class="header-right">
+    <div class="header-time" id="clockDisplay">—</div>
+    <div class="notif-bell" onclick="toggleNotifPanel()">🔔<span class="notif-dot" id="notifDot"></span></div>
+    <div class="role-badge" id="headerRoleBadge" style="display:none"><span class="dot"></span><span id="headerRoleText">—</span></div>
+    <div class="badge-online">● Online</div>
+    <button class="btn-logout" id="logoutBtn" style="display:none" onclick="doLogout()">⏏ Logout</button>
+  </div>
+</header>
+
+<!-- Notification Panel -->
+<div id="notifPanel">
+  <div class="notif-header">🔔 Notifications <button onclick="clearNotifs()" style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer">Clear all</button></div>
+  <div id="notifList"><div style="padding:20px;text-align:center;color:var(--muted);font-size:.85rem">No notifications</div></div>
+</div>
+
+<div class="app">
+  <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item active" data-section="dashboard"><span class="nav-icon">🏥</span><span>Dashboard</span></div>
+    <div class="nav-item" data-section="analytics"><span class="nav-icon">📊</span><span>Analytics</span></div>
+    <div class="nav-item" data-section="registration"><span class="nav-icon">📋</span><span>Registration</span></div>
+    <div class="nav-item" data-section="departments"><span class="nav-icon">🏨</span><span>Departments</span></div>
+    <hr class="nav-divider"/>
+    <div class="nav-section-label">OPD</div>
+    <div class="nav-item" data-section="appointments"><span class="nav-icon">📅</span><span>Appointments</span></div>
+    <div class="nav-item" data-section="queue"><span class="nav-icon">🎫</span><span>Queue / Tokens</span></div>
+    <div class="nav-item" data-section="consult" style="display:none"><span class="nav-icon">🩺</span><span>My Patients</span></div>
+    <div class="nav-item" data-section="chat"><span class="nav-icon">💬</span><span>Messages</span></div>
+    <hr class="nav-divider"/>
+    <div class="nav-section-label">Clinical</div>
+    <div class="nav-item" data-section="prescription"><span class="nav-icon">💊</span><span>Prescription</span></div>
+    <div class="nav-item" data-section="lab"><span class="nav-icon">🧪</span><span>Lab Tests</span></div>
+    <div class="nav-item" data-section="pharmacy"><span class="nav-icon">💉</span><span>Pharmacy</span></div>
+    <hr class="nav-divider"/>
+    <div class="nav-section-label">Admin</div>
+    <div class="nav-item" data-section="billing"><span class="nav-icon">💳</span><span>Billing</span></div>
+    <div class="nav-item" data-section="beds"><span class="nav-icon">🛏️</span><span>Bed Management</span></div>
+    <div class="nav-item" data-section="patients"><span class="nav-icon">👥</span><span>Patient Records</span></div>
+    <div class="nav-item" data-section="myrecords" style="display:none"><span class="nav-icon">📁</span><span>My Records</span></div>
+    <div class="nav-item" data-section="chatbot" style="display:none"><span class="nav-icon">🤖</span><span>Health Assistant</span></div>
+  </nav>
+
+  <main class="content">
+
+    <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+    <section class="section active" id="dashboard">
+      <div class="page-header">
+        <h1 id="dashGreeting">Good Morning, Admin 👋</h1>
+        <p>Here's today's overview — <span id="todayDate"></span></p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Patients</div><div class="stat-value" id="stat-patients">0</div><div class="stat-trend up" id="trend-patients">↑ registered</div></div>
+        <div class="stat-card green"><div class="stat-label">Appointments</div><div class="stat-value" id="stat-appts">0</div><div class="stat-sub">Confirmed today</div></div>
+        <div class="stat-card blue"><div class="stat-label">Tokens Active</div><div class="stat-value" id="stat-tokens">0</div><div class="stat-sub">In queue</div></div>
+        <div class="stat-card warn"><div class="stat-label">Revenue (₹)</div><div class="stat-value" id="stat-revenue">0</div><div class="stat-sub">Total billed</div></div>
+        <div class="stat-card purple"><div class="stat-label">Beds Available</div><div class="stat-value" id="stat-beds">0</div><div class="stat-sub">of total beds</div></div>
+        <div class="stat-card"><div class="stat-label">Lab Orders</div><div class="stat-value" id="stat-labs">0</div><div class="stat-sub">Pending</div></div>
+        <div class="stat-card green"><div class="stat-label">Medicines</div><div class="stat-value" id="stat-meds">0</div><div class="stat-sub">In pharmacy</div></div>
+        <div class="stat-card blue"><div class="stat-label">Prescriptions</div><div class="stat-value" id="stat-rx">0</div><div class="stat-sub">Written today</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card">
+          <div class="card-title">Recent Appointments</div>
+          <div class="table-wrap"><table><thead><tr><th>Patient</th><th>Doctor</th><th>Dept</th><th>Status</th></tr></thead><tbody id="dash-appt-tbody"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:18px">No appointments yet</td></tr></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Live Queue</div>
+          <div id="dash-queue-mini" style="color:var(--muted);font-size:.88rem">No tokens issued yet.</div>
+          <div class="card-title" style="margin-top:16px">Low Stock Alert 💊</div>
+          <div id="dash-low-stock" style="color:var(--muted);font-size:.85rem">No low stock items.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ ANALYTICS ═══════════════════ -->
+    <section class="section" id="analytics">
+      <div class="page-header"><h1>Analytics & Reports</h1><p>Visual insights across hospital operations</p></div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" id="an-revenue">₹0</div></div>
+        <div class="stat-card green"><div class="stat-label">Patients This Month</div><div class="stat-value" id="an-patients">0</div></div>
+        <div class="stat-card blue"><div class="stat-label">Avg Bill Value</div><div class="stat-value" id="an-avg">₹0</div></div>
+        <div class="stat-card warn"><div class="stat-label">Appointments</div><div class="stat-value" id="an-appts">0</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="card-title">Revenue Trend (Last 7 Days)</div><div class="chart-wrap"><canvas id="revenueChart"></canvas></div></div>
+        <div class="chart-card"><div class="card-title">Patients by Department</div><div class="chart-wrap"><canvas id="deptChart"></canvas></div></div>
+        <div class="chart-card"><div class="card-title">Appointment Status</div><div class="chart-wrap"><canvas id="apptStatusChart"></canvas></div></div>
+        <div class="chart-card"><div class="card-title">Bed Occupancy</div><div class="chart-wrap"><canvas id="bedChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Export Reports</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="exportPatientsPDF()">📤 Patients PDF</button>
+          <button class="btn btn-accent" onclick="exportBillingPDF()">📤 Billing PDF</button>
+          <button class="btn btn-success" onclick="exportAppointmentsPDF()">📤 Appointments PDF</button>
+          <button class="btn btn-outline" onclick="exportCSV('patients')">📊 Patients CSV</button>
+          <button class="btn btn-outline" onclick="exportCSV('bills')">📊 Billing CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ REGISTRATION ═══════════════════ -->
+    <section class="section" id="registration">
+      <div class="page-header"><h1>Patient Registration</h1><p>Register new OPD patients</p></div>
+      <div class="card">
+        <div class="card-title">New Patient Form</div>
+        <form id="regForm" onsubmit="registerPatient(event)">
+          <div class="form-grid">
+            <div class="form-group"><label>First Name <span class="required">*</span></label><input type="text" id="reg-fname" required/></div>
+            <div class="form-group"><label>Last Name <span class="required">*</span></label><input type="text" id="reg-lname" required/></div>
+            <div class="form-group"><label>Date of Birth <span class="required">*</span></label><input type="date" id="reg-dob" required/></div>
+            <div class="form-group"><label>Gender <span class="required">*</span></label><select id="reg-gender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+            <div class="form-group"><label>Blood Group</label><select id="reg-blood"><option value="">Unknown</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+            <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" id="reg-phone" maxlength="10" required/></div>
+            <div class="form-group"><label>Email</label><input type="email" id="reg-email"/></div>
+            <div class="form-group"><label>Aadhaar</label><input type="text" id="reg-aadhaar" maxlength="14"/></div>
+            <div class="form-group full"><label>Address</label><textarea id="reg-address"></textarea></div>
+            <div class="form-group"><label>Allergies</label><input type="text" id="reg-allergies"/></div>
+            <div class="form-group"><label>Emergency Contact</label><input type="text" id="reg-emergency"/></div>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary">✅ Register Patient</button>
+            <button type="reset" class="btn btn-outline">Reset</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ DEPARTMENTS ═══════════════════ -->
+    <section class="section" id="departments">
+      <div class="page-header"><h1>Departments & Doctors</h1><p>Manage specialities and staff</p></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:20px" id="deptGrid"></div>
+      <div class="card">
+        <div class="card-title">All Doctors</div>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Doctor</th><th>Speciality</th><th>Qualification</th><th>Schedule</th><th>Status</th><th>Actions</th></tr></thead><tbody id="doctorsTbody"></tbody></table></div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="openModal('addDoctorModal')">+ Add Doctor</button></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ APPOINTMENTS ═══════════════════ -->
+    <section class="section" id="appointments">
+      <div class="page-header"><h1>Appointment Booking</h1><p id="apptPageSub">Schedule OPD consultations</p></div>
+
+      <!-- STEP BAR -->
+      <div id="apptStepBar" style="display:flex;align-items:center;margin-bottom:22px;background:var(--surface);border-radius:12px;padding:14px 20px;box-shadow:var(--shadow)">
+        <div class="appt-step active" id="step1-ind"><div class="step-circle">1</div><div class="step-label">Details</div></div>
+        <div class="step-line" id="sline1"></div>
+        <div class="appt-step" id="step2-ind"><div class="step-circle">2</div><div class="step-label">Fee Summary</div></div>
+        <div class="step-line" id="sline2"></div>
+        <div class="appt-step" id="step3-ind"><div class="step-circle">3</div><div class="step-label">Payment</div></div>
+        <div class="step-line" id="sline3"></div>
+        <div class="appt-step" id="step4-ind"><div class="step-circle">✓</div><div class="step-label">Confirmed</div></div>
+      </div>
+
+      <!-- STEP 1: Details -->
+      <div class="card" id="apptStep1">
+        <div class="card-title">📋 Appointment Details</div>
+        <div class="form-grid cols3">
+          <div class="form-group" style="position:relative">
+            <label>Patient Name <span class="required">*</span></label>
+            <input type="text" id="appt-patient-name" placeholder="Type patient name or ID…" autocomplete="off"
+              oninput="patientAutocomplete(this.value)" onblur="setTimeout(()=>document.getElementById('patSuggest').style.display='none',200)"/>
+            <input type="hidden" id="appt-patient"/>
+            <div id="patSuggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;max-height:200px;overflow-y:auto;margin-top:3px"></div>
+          </div>
+          <div class="form-group"><label>Department <span class="required">*</span></label><select id="appt-dept" onchange="filterDoctors()"><option value="">Select Dept</option></select></div>
+          <div class="form-group"><label>Doctor <span class="required">*</span></label><select id="appt-doctor" onchange="updateConsultFee()"><option value="">Select Doctor</option></select></div>
+          <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="appt-date"/></div>
+          <div class="form-group"><label>Time Slot</label><select id="appt-time"><option>09:00 AM</option><option>09:30 AM</option><option>10:00 AM</option><option>10:30 AM</option><option>11:00 AM</option><option>11:30 AM</option><option>12:00 PM</option><option>02:00 PM</option><option>02:30 PM</option><option>03:00 PM</option><option>03:30 PM</option><option>04:00 PM</option><option>05:00 PM</option></select></div>
+          <div class="form-group"><label>Visit Type</label><select id="appt-type" onchange="updateConsultFee()"><option>New Visit</option><option>Follow-Up</option><option>Emergency</option></select></div>
+          <div class="form-group">
+            <label>Contact Number <span class="required">*</span></label>
+            <div style="position:relative">
+              <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.88rem;pointer-events:none">📞</span>
+              <input type="tel" id="appt-phone" maxlength="10" placeholder="10-digit mobile"
+                style="padding-left:32px" oninput="this.value=this.value.replace(/\D/g,'');validateApptPhone(this)"/>
+            </div>
+            <div id="appt-phone-hint" style="font-size:.72rem;color:var(--muted);margin-top:3px">Auto-filled for registered patients</div>
+          </div>
+          <div class="form-group full"><label>Symptoms / Notes</label><textarea id="appt-notes" rows="2" placeholder="Briefly describe symptoms…"></textarea></div>
+        </div>
+        <div id="apptStep1Err" style="display:none;background:#fde8e8;border:1px solid #f5b5b5;border-radius:8px;padding:10px 14px;font-size:.83rem;color:var(--danger);margin-top:10px"></div>
+        <div class="btn-row">
+          <button class="btn btn-accent" onclick="goToFeeSummary()">Next: Fee Summary →</button>
+          <button class="btn btn-outline" onclick="resetApptForm()">Clear</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Fee Summary -->
+      <div class="card" id="apptStep2" style="display:none">
+        <div class="card-title">💳 Fee Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:16px">
+          <div>
+            <div style="font-size:.76rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Appointment Details</div>
+            <div id="feeSummaryDetails" style="font-size:.87rem;line-height:2;color:var(--text)"></div>
+          </div>
+          <div>
+            <div style="font-size:.76rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Fee Breakdown</div>
+            <div id="feeBreakdown"></div>
+            <div style="border-top:2px dashed var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:700;color:var(--primary)">Total Payable</span>
+              <span style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--accent)" id="feeTotalDisplay">₹0</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:12px 16px;display:inline-flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:1.4rem">📱</span>
+          <div><div style="font-weight:700;color:var(--primary);font-size:.9rem">UPI Payment Only</div><div style="font-size:.76rem;color:var(--muted)">Scan QR · PhonePe · GPay · Paytm · BHIM</div></div>
+        </div>
+        <input type="hidden" id="appt-pay-mode" value="UPI"/>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goToPayment()">Proceed to Pay →</button>
+          <button class="btn btn-outline" onclick="goToApptStep(1)">← Back</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: UPI Payment Gateway -->
+      <div id="apptStep3" style="display:none;padding-bottom:8px">
+        <div class="upi-gateway">
+          <!-- Header -->
+          <div class="upi-gateway-header">
+            <div>
+              <div class="merchant-name">🏥 MedEase Hospital</div>
+              <div class="merchant-sub">Secure UPI Payment</div>
+            </div>
+            <div class="secure-badge">🔒 256-bit Secure</div>
+          </div>
+
+          <!-- Amount -->
+          <div class="upi-amount-section">
+            <div class="upi-amount-label">Total Amount Payable</div>
+            <div class="upi-amount-big"><span>₹</span><span id="upiApptAmount">0</span></div>
+            <div class="upi-breakdown-row">
+              <span id="upiBreakdownLabel">Consultation + OPD Registration</span>
+              <span id="upiBreakdownAmt"></span>
+            </div>
+          </div>
+
+          <!-- QR Code -->
+          <div class="upi-qr-section">
+            <div style="font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Scan QR to Pay</div>
+            <div class="upi-qr-frame">
+              <div id="apptUpiQr"></div>
+            </div>
+            <div class="upi-apps-row">
+              <span style="font-size:.72rem;color:var(--muted)">Pay with</span>
+              <span class="upi-app-pill">📱 PhonePe</span>
+              <span class="upi-app-pill">🔵 GPay</span>
+              <span class="upi-app-pill">🟦 Paytm</span>
+              <span class="upi-app-pill">🇮🇳 BHIM</span>
+            </div>
+          </div>
+
+          <!-- UPI ID row -->
+          <div style="padding:0 24px 12px">
+            <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:6px;text-align:center">OR PAY DIRECTLY TO UPI ID</div>
+            <div class="upi-id-section" onclick="copyUpiId()">
+              <div>
+                <div style="font-size:.68rem;color:var(--muted);margin-bottom:2px">UPI ID</div>
+                <div class="upi-id-text">barhate.komal12@okaxis</div>
+              </div>
+              <button class="upi-copy-btn" id="upiCopyBtn">Copy</button>
+            </div>
+          </div>
+
+          <div class="upi-divider">After payment, enter your Transaction ID</div>
+
+          <!-- TXN ID input -->
+          <div class="upi-txn-section">
+            <label style="font-size:.8rem;font-weight:700;color:var(--primary);display:block">UPI Transaction ID <span class="required">*</span></label>
+            <div style="font-size:.73rem;color:var(--muted);margin-top:2px;margin-bottom:6px">Found in your UPI app under payment history</div>
+            <div class="upi-txn-input-wrap">
+              <input type="text" id="apptUpiTxnId" placeholder="e.g. 407311234567890"
+                oninput="validateTxnId(this)"/>
+              <span class="upi-verify-tag" id="txnVerifyTag">—</span>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div id="apptPayErr" class="upi-err"></div>
+
+          <!-- Footer buttons -->
+          <div class="upi-gateway-footer">
+            <button class="upi-back-btn" onclick="goToApptStep(2)">← Back</button>
+            <button class="upi-confirm-btn" onclick="confirmApptPayment()">✅ Confirm & Book Appointment</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Confirmed + Token -->
+      <div class="card" id="apptStep4" style="display:none;text-align:center;padding:32px 20px">
+        <div style="font-size:3.5rem;margin-bottom:12px">🎉</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.7rem;color:var(--primary);margin-bottom:6px">Appointment Confirmed!</div>
+        <div style="color:var(--muted);font-size:.87rem;margin-bottom:22px">UPI payment verified · Appointment booked · Token issued</div>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;max-width:860px;margin:0 auto">
+          <!-- Booking receipt -->
+          <div id="apptConfirmCard" style="background:linear-gradient(135deg,#1a3a5c,#234b75);border-radius:16px;padding:22px 28px;color:#fff;flex:1;min-width:260px;text-align:left"></div>
+          <!-- Token card -->
+          <div id="apptTokenCard" style="background:linear-gradient(135deg,#e8613a,#cf4e2a);border-radius:16px;padding:22px 28px;color:#fff;flex:0 0 200px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+            <div style="font-size:.7rem;opacity:.6;text-transform:uppercase;letter-spacing:1.5px">Queue Token</div>
+            <div id="tokenBigNum" style="font-family:'DM Serif Display',serif;font-size:4rem;line-height:1;font-weight:700">—</div>
+            <div id="tokenDeptLabel" style="font-size:.8rem;opacity:.8;font-weight:600"></div>
+            <div style="width:100%;border-top:1px solid rgba(255,255,255,.2);margin:6px 0;padding-top:8px">
+              <div id="tokenPatLabel" style="font-size:.78rem;opacity:.75"></div>
+              <div id="tokenPriorLabel" style="font-size:.7rem;opacity:.55;margin-top:2px"></div>
+            </div>
+            <div style="font-size:.68rem;opacity:.5">Please wait to be called</div>
+          </div>
+        </div>
+        <div class="btn-row" style="justify-content:center;margin-top:20px">
+          <button class="btn btn-outline" onclick="printApptReceipt()">🖨️ Print Receipt</button>
+          <button class="btn btn-outline" onclick="printToken()">🎫 Print Token</button>
+          <button class="btn btn-primary" onclick="resetApptForm()">+ Book Another</button>
+        </div>
+      </div>
+
+      <!-- APPOINTMENT LIST -->
+      <div class="card" id="apptListCard" style="margin-top:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+          <div class="card-title" style="margin:0" id="apptListTitle">All Appointments</div>
+          <input type="text" id="apptSearch" placeholder="🔍 Search…" oninput="renderAppointments()" style="max-width:220px;padding:7px 12px;font-size:.83rem"/>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Dept</th><th>Date</th><th>Time</th><th>Type</th><th>Fee</th><th>Payment</th><th>Status</th><th id="apptActionColHdr">Action</th></tr></thead><tbody id="apptTbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ QUEUE ═══════════════════ -->
+    <section class="section" id="queue">
+      <div class="page-header"><h1>Queue & Token Management</h1><p>Manage patient flow</p></div>
+      <div class="card">
+        <div class="card-title">Issue Token</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr) auto;gap:12px;align-items:flex-end">
+          <div class="form-group"><label>Patient</label><select id="q-patient"></select></div>
+          <div class="form-group"><label>Department</label><select id="q-dept"></select></div>
+          <div class="form-group"><label>Priority</label><select id="q-priority"><option>Normal</option><option>Senior Citizen</option><option>Emergency</option></select></div>
+          <button class="btn btn-accent" onclick="issueToken()">🎫 Issue Token</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">Live Queue Board</div><div class="queue-grid" id="queueBoard"><div style="color:var(--muted);font-size:.88rem;grid-column:1/-1">No tokens issued yet.</div></div></div>
+    </section>
+
+    <!-- ═══════════════════ CHAT ═══════════════════ -->
+    <section class="section" id="chat">
+      <div class="page-header"><h1>Messages</h1><p>Doctor-Patient communication</p></div>
+      <div class="chat-layout card" style="padding:0">
+        <div class="chat-sidebar">
+          <div class="chat-sidebar-header">💬 Conversations</div>
+          <div id="chatContactList"></div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header" id="chatHeader">
+            <div class="chat-avatar" id="chatAvatar">👤</div>
+            <div><div class="chat-header-name" id="chatHeaderName">Select a conversation</div><div class="chat-header-status" id="chatHeaderStatus">—</div></div>
+          </div>
+          <div class="chat-messages" id="chatMessages"><div style="text-align:center;color:var(--muted);padding:40px;font-size:.88rem">Select a conversation to start chatting</div></div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMessage()"/>
+            <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ PRESCRIPTION ═══════════════════ -->
+    <section class="section" id="prescription">
+      <div class="page-header"><h1>Prescription & Records</h1><p>Write prescriptions and view history</p></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--accent);font-style:italic">℞</div>
+          <div><div style="font-weight:600;font-size:1rem;color:var(--primary)">MedEase Hospital</div><div style="font-size:.78rem;color:var(--muted)">OPD Prescription Form</div></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>Patient</label><select id="rx-patient" onchange="loadPatientTimeline()"></select></div>
+          <div class="form-group"><label>Doctor</label><select id="rx-doctor"></select></div>
+          <div class="form-group"><label>Diagnosis</label><input type="text" id="rx-diagnosis"/></div>
+          <div class="form-group"><label>Date</label><input type="date" id="rx-date"/></div>
+          <div class="form-group full"><label>Complaints</label><textarea id="rx-complaints" rows="2"></textarea></div>
+        </div>
+        <div style="margin-top:14px">
+          <div class="card-title">Medications</div>
+          <div class="med-row-header"><span>Medicine</span><span>Dosage</span><span>Frequency</span><span>Duration</span><span></span></div>
+          <div id="medsContainer">
+            <div class="med-row"><input type="text" placeholder="e.g. Paracetamol 500mg"/><input type="text" placeholder="1 tablet"/><select><option>OD</option><option>BD</option><option>TDS</option><option>QID</option><option>SOS</option><option>HS</option></select><input type="text" placeholder="5 days"/><span></span></div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="addMedRow()">+ Add Medicine</button>
+        </div>
+        <div class="form-group" style="margin-top:14px"><label>Advice</label><textarea id="rx-advice"></textarea></div>
+        <div class="form-group" style="margin-top:10px"><label>Next Visit</label><input type="date" id="rx-nextvisit" style="max-width:200px"/></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="savePrescription()">💊 Save Prescription</button>
+          <button class="btn btn-outline" onclick="printPrescription()">🖨️ Print Rx</button>
+        </div>
+      </div>
+      <!-- Patient Timeline -->
+      <div class="card" id="timelineCard" style="display:none">
+        <div class="card-title">📋 Patient Medical History Timeline</div>
+        <div class="timeline" id="patientTimeline"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Prescription History</div>
+        <div class="table-wrap"><table><thead><tr><th>Rx ID</th><th>Patient</th><th>Doctor</th><th>Diagnosis</th><th>Date</th><th>Next Visit</th></tr></thead><tbody id="rxHistoryTbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ LAB TESTS ═══════════════════ -->
+    <section class="section" id="lab">
+      <div class="page-header"><h1>Lab Test Orders & Reports</h1><p>Order tests and upload results</p></div>
+      <div class="card">
+        <div class="card-title">Order Lab Test</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Patient</label><select id="lab-patient"></select></div>
+          <div class="form-group"><label>Test Type</label><select id="lab-test"><option>Complete Blood Count (CBC)</option><option>Blood Sugar (Fasting)</option><option>Blood Sugar (PP)</option><option>HbA1c</option><option>Lipid Profile</option><option>Liver Function Test</option><option>Kidney Function Test</option><option>Thyroid Profile</option><option>Urine Routine</option><option>X-Ray Chest</option><option>ECG</option><option>Ultrasound Abdomen</option><option>MRI Brain</option><option>CT Scan</option><option>COVID-19 RT-PCR</option><option>Other</option></select></div>
+          <div class="form-group"><label>Ordered By (Doctor)</label><select id="lab-doctor"></select></div>
+          <div class="form-group"><label>Priority</label><select id="lab-priority"><option>Normal</option><option>Urgent</option><option>STAT</option></select></div>
+          <div class="form-group full"><label>Clinical Notes</label><textarea id="lab-notes" rows="2"></textarea></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="orderLabTest()">🧪 Order Test</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Lab Orders</div>
+        <div class="table-wrap"><table><thead><tr><th>Lab ID</th><th>Patient</th><th>Test</th><th>Doctor</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead><tbody id="labTbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ PHARMACY ═══════════════════ -->
+    <section class="section" id="pharmacy">
+      <div class="page-header"><h1>Pharmacy & Medicine Inventory</h1><p>Manage stock and dispensing</p></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card">
+          <div class="card-title">Add Medicine to Stock</div>
+          <div class="form-group" style="margin-bottom:12px"><label>Medicine Name</label><input type="text" id="ph-name" placeholder="e.g. Paracetamol 500mg"/></div>
+          <div class="form-group" style="margin-bottom:12px"><label>Category</label><select id="ph-cat"><option>Analgesic</option><option>Antibiotic</option><option>Antidiabetic</option><option>Antihypertensive</option><option>Antacid</option><option>Vitamin</option><option>IV Fluid</option><option>Injection</option><option>Syrup</option><option>Other</option></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div class="form-group"><label>Quantity</label><input type="number" id="ph-qty" min="0" value="100"/></div>
+            <div class="form-group"><label>Min Stock</label><input type="number" id="ph-min" min="0" value="20"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div class="form-group"><label>Unit Price (₹)</label><input type="number" id="ph-price" min="0" value="10"/></div>
+            <div class="form-group"><label>Expiry Date</label><input type="date" id="ph-expiry"/></div>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="addMedicine()">+ Add to Inventory</button></div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚠️ Low Stock Alerts</div>
+          <div id="lowStockList" style="color:var(--muted);font-size:.85rem">No low stock items.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Medicine Inventory</div>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Category</th><th>Stock</th><th>Min</th><th>Price</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead><tbody id="pharmacyTbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ BILLING ═══════════════════ -->
+    <section class="section" id="billing">
+      <div class="page-header"><h1>Billing & Payments</h1><p>Generate bills and process payments</p></div>
+      <div class="card">
+        <div class="card-title">Generate Bill</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Patient</label><select id="bill-patient"></select></div>
+          <div class="form-group"><label>Appointment</label><select id="bill-appt"><option value="">Select Appointment</option></select></div>
+          <div class="form-group"><label>Payment Mode</label><select id="bill-mode" onchange="onPaymentModeChange()"><option>Cash</option><option>UPI</option><option>Card</option><option>Insurance</option></select></div>
+          <div class="form-group"><label>Discount (%)</label><input type="number" id="bill-discount" value="0" min="0" max="100" oninput="calcTotal()"/></div>
+        </div>
+        <div style="margin-top:16px">
+          <div class="card-title">Bill Items</div>
+          <div class="med-row-header"><span>Service</span><span>Rate (₹)</span><span>Qty</span><span>Amount</span><span></span></div>
+          <div id="billItemsContainer">
+            <div class="bill-item-row">
+              <select class="service-select" onchange="updateServiceRate(this)"><option>Consultation</option><option>OPD Registration</option><option>ECG</option><option>X-Ray</option><option>Blood Test</option><option>Urine Test</option><option>Dressing</option><option>Injection</option><option>Physiotherapy</option><option>Other</option></select>
+              <input type="number" class="rate-input" value="500" oninput="calcTotal()"/>
+              <input type="number" class="qty-input" value="1" min="1" oninput="calcTotal()"/>
+              <input type="text" class="amt-input" readonly value="₹500"/>
+              <span></span>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="addBillItem()">+ Add Item</button>
+        </div>
+        <div class="bill-total-row"><span style="font-weight:600;color:var(--primary)">TOTAL (after discount):</span><span class="bill-total-val" id="billTotal">₹500</span></div>
+        <div class="btn-row"><button class="btn btn-success" onclick="generateBill()">🧾 Generate Bill</button><button class="btn btn-outline" onclick="printBill()">🖨️ Print</button></div>
+      </div>
+      <div class="card"><div class="card-title">Billing History</div><div class="table-wrap"><table><thead><tr><th>Bill ID</th><th>Patient</th><th>Date</th><th>Amount</th><th>Mode</th><th>Txn ID</th><th>Status</th></tr></thead><tbody id="billHistoryTbody"></tbody></table></div></div>
+    </section>
+
+    <!-- ═══════════════════ BED MANAGEMENT ═══════════════════ -->
+    <section class="section" id="beds">
+      <div class="page-header"><h1>Bed & Ward Management</h1><p>Track occupancy and patient admissions</p></div>
+      <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card green"><div class="stat-label">Available</div><div class="stat-value" id="bed-avail">0</div></div>
+        <div class="stat-card"><div class="stat-label">Occupied</div><div class="stat-value" id="bed-occ">0</div></div>
+        <div class="stat-card warn"><div class="stat-label">Maintenance</div><div class="stat-value" id="bed-maint">0</div></div>
+        <div class="stat-card blue"><div class="stat-label">Total Beds</div><div class="stat-value" id="bed-total">0</div></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div class="card-title" style="margin:0">Ward Layout — Click a bed to manage</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:.8rem">
+            <span style="background:#d4f5e9;padding:3px 10px;border-radius:6px;color:#1a5a40">● Available</span>
+            <span style="background:#fde8e8;padding:3px 10px;border-radius:6px;color:#7a1a1a">● Occupied</span>
+            <span style="background:#fff5dc;padding:3px 10px;border-radius:6px;color:#7a4a00">● Maintenance</span>
+          </div>
+        </div>
+        <div class="bed-grid" id="bedGrid"></div>
+      </div>
+    </section>
+
+
+
+    <!-- ═══════════════════ DOCTOR CONSULT ═══════════════════ -->
+    <section class="section" id="consult">
+      <div class="page-header"><h1>My Patient Queue</h1><p id="consultSubtitle">Patients assigned to you today</p></div>
+
+      <div class="consult-layout">
+        <!-- LEFT: Queue list -->
+        <div>
+          <div class="card" style="padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="card-title" style="margin:0">Today's Queue</div>
+              <span id="myQueueCount" style="background:var(--accent);color:#fff;border-radius:99px;padding:2px 10px;font-size:.75rem;font-weight:700">0</span>
+            </div>
+            <div id="myQueueList">
+              <div style="color:var(--muted);font-size:.84rem;text-align:center;padding:20px 0">No patients in queue</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Consult panel -->
+        <div id="consultPanel" style="display:none">
+          <div class="consult-panel">
+            <!-- Patient header -->
+            <div class="consult-panel-header">
+              <div>
+                <div class="consult-patient-name" id="cpName">—</div>
+                <div class="consult-patient-meta" id="cpMeta">Select a patient from the queue</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span id="cpTokenBadge" style="background:rgba(232,97,58,.9);border-radius:99px;padding:4px 14px;font-size:.8rem;font-weight:700">—</span>
+                <button onclick="markConsultDone()" style="background:rgba(76,175,142,.25);border:1px solid rgba(76,175,142,.5);color:#7ef0c8;border-radius:8px;padding:6px 14px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit">✓ Done</button>
+              </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="consult-tabs">
+              <button class="consult-tab active" onclick="switchConsultTab('ctab-vitals',this)">🩺 Vitals</button>
+              <button class="consult-tab" onclick="switchConsultTab('ctab-rx',this)">💊 Prescription</button>
+              <button class="consult-tab" onclick="switchConsultTab('ctab-labs',this)">🧪 Order Labs</button>
+              <button class="consult-tab" onclick="switchConsultTab('ctab-history',this)">📋 History</button>
+            </div>
+
+            <!-- Tab: Vitals -->
+            <div class="consult-body" id="ctab-vitals">
+              <div class="vital-grid">
+                <div class="vital-box"><label>BP (mmHg)</label><input type="text" id="v-bp" placeholder="120/80"/><div class="unit">mmHg</div></div>
+                <div class="vital-box"><label>Pulse</label><input type="number" id="v-pulse" placeholder="72"/><div class="unit">bpm</div></div>
+                <div class="vital-box"><label>Temp</label><input type="number" id="v-temp" placeholder="98.6" step="0.1"/><div class="unit">°F</div></div>
+                <div class="vital-box"><label>SpO₂</label><input type="number" id="v-spo2" placeholder="98"/><div class="unit">%</div></div>
+                <div class="vital-box"><label>Weight</label><input type="number" id="v-weight" placeholder="70" step="0.1"/><div class="unit">kg</div></div>
+                <div class="vital-box"><label>Height</label><input type="number" id="v-height" placeholder="170"/><div class="unit">cm</div></div>
+                <div class="vital-box"><label>BMI</label><input type="text" id="v-bmi" placeholder="—" readonly style="color:var(--accent2)"/><div class="unit">kg/m²</div></div>
+                <div class="vital-box"><label>RBS</label><input type="number" id="v-rbs" placeholder="—"/><div class="unit">mg/dL</div></div>
+              </div>
+              <div class="form-group">
+                <label>Chief Complaints</label>
+                <textarea id="v-complaints" rows="2" placeholder="Patient's main symptoms and complaints…"></textarea>
+              </div>
+              <div class="form-group" style="margin-top:10px">
+                <label>Examination Notes</label>
+                <textarea id="v-exam" rows="2" placeholder="Clinical examination findings…"></textarea>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="saveVitalsGoRx()">Save & Write Prescription →</button>
+              </div>
+            </div>
+
+            <!-- Tab: Prescription -->
+            <div class="consult-body" id="ctab-rx" style="display:none">
+              <div class="form-grid" style="margin-bottom:14px">
+                <div class="form-group"><label>Diagnosis <span class="required">*</span></label><input type="text" id="c-diagnosis" placeholder="Primary diagnosis…"/></div>
+                <div class="form-group"><label>Next Visit Date</label><input type="date" id="c-nextvisit"/></div>
+                <div class="form-group full"><label>Advice / Instructions</label><textarea id="c-advice" rows="2" placeholder="Diet, rest, follow-up instructions…"></textarea></div>
+              </div>
+              <div class="card-title" style="font-size:.85rem;margin-bottom:10px">Medications</div>
+              <div style="display:grid;grid-template-columns:2.2fr 1fr 1.1fr 1fr 28px;gap:8px;margin-bottom:6px">
+                <span style="font-size:.72rem;color:var(--muted);font-weight:600;padding:0 4px">MEDICINE</span>
+                <span style="font-size:.72rem;color:var(--muted);font-weight:600">DOSAGE</span>
+                <span style="font-size:.72rem;color:var(--muted);font-weight:600">FREQUENCY</span>
+                <span style="font-size:.72rem;color:var(--muted);font-weight:600">DURATION</span>
+                <span></span>
+              </div>
+              <div id="cMedsContainer">
+                <div class="rx-med-row">
+                  <input type="text" placeholder="Medicine name & strength"/>
+                  <input type="text" placeholder="1 tab"/>
+                  <select><option>OD</option><option>BD</option><option>TDS</option><option>QID</option><option>SOS</option><option>HS</option></select>
+                  <input type="text" placeholder="5 days"/>
+                  <span></span>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="addConsultMedRow()" style="margin-top:6px">+ Add Medicine</button>
+              <div class="btn-row" style="margin-top:18px">
+                <button class="btn btn-success" onclick="saveConsultPrescription()">💊 Save Prescription</button>
+                <button class="btn btn-outline" onclick="printConsultRx()">🖨️ Print Rx</button>
+              </div>
+            </div>
+
+            <!-- Tab: Order Labs -->
+            <div class="consult-body" id="ctab-labs" style="display:none">
+              <div class="form-grid">
+                <div class="form-group"><label>Test Type <span class="required">*</span></label>
+                  <select id="c-labtest"><option>Complete Blood Count (CBC)</option><option>Blood Sugar (Fasting)</option><option>Blood Sugar (PP)</option><option>HbA1c</option><option>Lipid Profile</option><option>Liver Function Test</option><option>Kidney Function Test</option><option>Thyroid Profile</option><option>Urine Routine</option><option>X-Ray Chest</option><option>ECG</option><option>Ultrasound Abdomen</option><option>MRI Brain</option><option>CT Scan</option><option>COVID-19 RT-PCR</option><option>Other</option></select>
+                </div>
+                <div class="form-group"><label>Priority</label>
+                  <select id="c-labpriority"><option>Normal</option><option>Urgent</option><option>STAT</option></select>
+                </div>
+                <div class="form-group full"><label>Clinical Notes</label><textarea id="c-labnotes" rows="2" placeholder="Reason for test…"></textarea></div>
+              </div>
+              <div class="btn-row"><button class="btn btn-primary" onclick="saveConsultLab()">🧪 Order Lab Test</button></div>
+              <div style="margin-top:16px" id="cLabOrdersList"></div>
+            </div>
+
+            <!-- Tab: History -->
+            <div class="consult-body" id="ctab-history" style="display:none">
+              <div id="cHistoryContent" style="color:var(--muted);font-size:.84rem">Select a patient to view history.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state when no patient selected -->
+        <div id="consultEmptyState" style="background:var(--surface);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center">
+          <div style="font-size:3rem;margin-bottom:14px">🩺</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--primary);margin-bottom:6px">Select a Patient</div>
+          <div style="color:var(--muted);font-size:.85rem">Click on a patient from the queue on the left to begin consultation</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════ HEALTH CHATBOT ═══════════════════ -->
+    <section class="section" id="chatbot">
+      <div class="page-header"><h1>Health Assistant</h1><p>Ask anything about your health, appointments or hospital services</p></div>
+      <div class="chatbot-wrap">
+        <!-- Sidebar: Quick topics -->
+        <div class="chatbot-sidebar">
+          <div class="chatbot-sidebar-header">
+            <h3>🤖 Quick Topics</h3>
+            <p>Tap to get instant help</p>
+          </div>
+          <div class="chatbot-topics">
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('How do I book an appointment?')"><span class="topic-icon">📅</span>Book Appointment</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('What are the OPD timings?')"><span class="topic-icon">⏰</span>OPD Timings</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('What documents should I bring?')"><span class="topic-icon">📋</span>Documents Needed</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('How do I view my lab reports?')"><span class="topic-icon">🧪</span>Lab Reports</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('What are the payment options?')"><span class="topic-icon">💳</span>Payment Options</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('Tell me about the available departments')"><span class="topic-icon">🏥</span>Departments</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('How do I get my prescription?')"><span class="topic-icon">💊</span>My Prescription</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('What should I do in case of emergency?')"><span class="topic-icon">🚨</span>Emergency Help</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('How to prepare for a blood test?')"><span class="topic-icon">🩸</span>Test Preparation</button>
+            <button class="chatbot-topic-btn" onclick="cbQuickTopic('I want to speak to a doctor')"><span class="topic-icon">👨‍⚕️</span>Talk to Doctor</button>
+          </div>
+        </div>
+        <!-- Main chat -->
+        <div class="chatbot-main">
+          <div class="chatbot-header">
+            <div class="chatbot-avatar">🤖</div>
+            <div class="chatbot-header-info">
+              <h3>MedEase Health Assistant</h3>
+              <p><span class="chatbot-status-dot"></span>Online · Powered by AI</p>
+            </div>
+          </div>
+          <div class="chatbot-messages" id="cbMessages"></div>
+          <div class="chatbot-input-row">
+            <input type="text" id="cbInput" placeholder="Ask me anything about your health or hospital…" onkeydown="if(event.key==='Enter')cbSend()"/>
+            <button class="cb-send-btn" onclick="cbSend()">➤</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ MY RECORDS (PATIENT VIEW) ═══════════════════ -->
+    <section class="section" id="myrecords">
+      <div class="page-header"><h1>My Health Records</h1><p>Your appointments, prescriptions, bills and lab results</p></div>
+      <!-- Record Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="rec-tab active" onclick="switchRecTab('rec-appts',this)">📅 Appointments</button>
+        <button class="rec-tab" onclick="switchRecTab('rec-bills',this)">💳 Bills & Payments</button>
+        <button class="rec-tab" onclick="switchRecTab('rec-rx',this)">💊 Prescriptions</button>
+        <button class="rec-tab" onclick="switchRecTab('rec-labs',this)">🧪 Lab Results</button>
+        <button class="rec-tab" onclick="switchRecTab('rec-timeline',this)">📋 Timeline</button>
+      </div>
+      <!-- Appointments -->
+      <div class="rec-panel active card" id="rec-appts">
+        <div class="card-title">My Appointments</div>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Doctor</th><th>Dept</th><th>Date</th><th>Time</th><th>Type</th><th>Fee</th><th>Payment</th><th>Status</th></tr></thead><tbody id="myApptTbody"></tbody></table></div>
+      </div>
+      <!-- Bills -->
+      <div class="rec-panel card" id="rec-bills">
+        <div class="card-title">My Bills & Payments</div>
+        <div class="table-wrap"><table><thead><tr><th>Bill ID</th><th>Date</th><th>Amount</th><th>Mode</th><th>Txn ID</th><th>Status</th></tr></thead><tbody id="myBillTbody"></tbody></table></div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;gap:12px">
+          <span style="color:var(--muted);font-size:.86rem">Total Paid</span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--accent)" id="myTotalPaid">₹0</span>
+        </div>
+      </div>
+      <!-- Prescriptions -->
+      <div class="rec-panel card" id="rec-rx">
+        <div class="card-title">My Prescriptions</div>
+        <div class="table-wrap"><table><thead><tr><th>Rx ID</th><th>Doctor</th><th>Diagnosis</th><th>Date</th><th>Next Visit</th></tr></thead><tbody id="myRxTbody"></tbody></table></div>
+      </div>
+      <!-- Lab Results -->
+      <div class="rec-panel card" id="rec-labs">
+        <div class="card-title">My Lab Results</div>
+        <div class="table-wrap"><table><thead><tr><th>Lab ID</th><th>Test</th><th>Doctor</th><th>Priority</th><th>Date</th><th>Status</th><th>Result</th></tr></thead><tbody id="myLabTbody"></tbody></table></div>
+      </div>
+      <!-- Timeline -->
+      <div class="rec-panel card" id="rec-timeline">
+        <div class="card-title">📋 My Medical Timeline</div>
+        <div class="timeline" id="myTimeline"></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ PATIENT RECORDS ═══════════════════ -->
+    <section class="section" id="patients">
+      <div class="page-header"><h1>Patient Records</h1><p>All registered OPD patients</p></div>
+      <div class="card">
+        <div style="display:flex;gap:12px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="patientSearch" placeholder="🔍 Search by name, ID or phone…" oninput="searchPatients()" style="max-width:280px"/>
+          <span id="patientCount" style="color:var(--muted);font-size:.83rem"></span>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>P-ID</th><th>Name</th><th>Age/Gender</th><th>Blood</th><th>Phone</th><th>Allergies</th><th>Registered</th><th>Actions</th></tr></thead><tbody id="patientsTbody"></tbody></table></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+<!-- Add Doctor -->
+<div class="modal-overlay" id="addDoctorModal">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('addDoctorModal')">✕</button>
+    <div class="modal-title">👨‍⚕️ Add New Doctor</div>
+
+    <!-- Step 1: Doctor Details -->
+    <div id="docFormStep">
+      <div style="background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:.82rem;color:var(--muted)">
+        ℹ️ Username is auto-generated from doctor name. You can set a custom password below.
+      </div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Full Name <span class="required">*</span></label>
+          <input type="text" id="doc-name" placeholder="e.g. Dr. Priya Sharma"/>
+        </div>
+        <div class="form-group">
+          <label>Department <span class="required">*</span></label>
+          <select id="doc-dept"><option value="">Select Department</option></select>
+        </div>
+        <div class="form-group">
+          <label>Qualification <span class="required">*</span></label>
+          <input type="text" id="doc-qual" placeholder="MBBS, MD, DM"/>
+        </div>
+        <div class="form-group">
+          <label>Experience (years)</label>
+          <input type="number" id="doc-exp" placeholder="10" min="0" max="60"/>
+        </div>
+        <div class="form-group">
+          <label>Phone <span class="required">*</span></label>
+          <input type="tel" id="doc-phone" placeholder="9876543210" maxlength="10"/>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="doc-email" placeholder="doctor@medease.com"/>
+        </div>
+        <div class="form-group">
+          <label>Schedule</label>
+          <input type="text" id="doc-schedule" placeholder="Mon-Fri 9AM-1PM"/>
+        </div>
+        <div class="form-group">
+          <label>Consultation Fee (₹)</label>
+          <input type="number" id="doc-fee" placeholder="500" min="0"/>
+        </div>
+        <div class="form-group full">
+          <label>Specialization / About</label>
+          <textarea id="doc-about" rows="2" placeholder="Brief specialization or bio…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Login Password <span class="required">*</span></label>
+          <div style="position:relative">
+            <input type="text" id="doc-password" placeholder="e.g. MyPass@123" style="padding-right:80px"/>
+            <button type="button" onclick="generateDocPassword()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--primary);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:.72rem;cursor:pointer;font-family:inherit">Auto</button>
+          </div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:3px">Will be used by doctor to login. Click Auto to generate.</div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="doc-status"><option value="Active">Active</option><option value="On Leave">On Leave</option><option value="Inactive">Inactive</option></select>
+        </div>
+      </div>
+      <div id="docFormError" style="display:none;background:#fde8e8;border:1px solid #f5b5b5;border-radius:8px;padding:10px 14px;font-size:.83rem;color:var(--danger);margin-top:12px"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="addDoctor()">✅ Save Doctor</button>
+        <button class="btn btn-outline" onclick="closeModal('addDoctorModal')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Success + Credentials -->
+    <div id="docSuccessStep" style="display:none;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:10px">🎉</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--primary);margin-bottom:6px">Doctor Added Successfully!</div>
+      <div style="color:var(--muted);font-size:.85rem;margin-bottom:20px">Share these login credentials with the doctor</div>
+      <div style="background:linear-gradient(135deg,#1a3a5c,#234b75);border-radius:14px;padding:20px;color:#fff;text-align:left">
+        <div style="font-size:.72rem;opacity:.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🔐 Login Credentials</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;align-items:center">
+          <span style="opacity:.7;font-size:.82rem">Username</span>
+          <span id="cred-username" style="font-weight:700;font-size:.95rem;background:rgba(255,255,255,.12);padding:4px 12px;border-radius:6px;letter-spacing:.5px"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="opacity:.7;font-size:.82rem">Password</span>
+          <span id="cred-password" style="font-weight:700;font-size:.95rem;background:rgba(255,255,255,.12);padding:4px 12px;border-radius:6px;letter-spacing:.5px"></span>
+        </div>
+        <div style="margin-top:14px;font-size:.74rem;opacity:.5;border-top:1px solid rgba(255,255,255,.15);padding-top:10px">⚠️ Please share these securely. Doctor can change password after first login.</div>
+      </div>
+      <div id="cred-summary" style="margin-top:14px;background:var(--surface2);border-radius:10px;padding:14px;text-align:left;font-size:.83rem;color:var(--muted)"></div>
+      <div class="btn-row" style="justify-content:center;margin-top:16px">
+        <button class="btn btn-outline" onclick="printDoctorCredentials()">🖨️ Print Credentials</button>
+        <button class="btn btn-primary" onclick="resetDoctorModal()">➕ Add Another</button>
+        <button class="btn btn-outline" onclick="closeModal('addDoctorModal')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPI QR Modal -->
+<div class="modal-overlay" id="upiQrModal">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <button class="modal-close" onclick="closeModal('upiQrModal')">✕</button>
+    <div class="modal-title" style="text-align:left">📱 Pay via UPI</div>
+    <div class="upi-amount-badge"><div class="label">Amount to Pay</div><div class="amount" id="upi-display-amount">₹0</div></div>
+    <div class="upi-qr-box"><div id="upiQrCanvas"></div></div>
+    <div class="upi-id-chip" id="upi-display-id">barhate.komal12@okaxis</div>
+    <div style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Scan with PhonePe · GPay · Paytm · BHIM</div>
+    <div class="upi-steps"><p><span>1</span>Open any UPI app and scan</p><p><span>2</span>Amount is pre-filled — confirm and pay</p><p><span>3</span>Copy the Transaction ID after payment</p><p><span>4</span>Enter it below and click Submit</p></div>
+    <div style="margin-top:14px;text-align:left">
+      <label style="font-size:.8rem;font-weight:600;color:var(--primary)">UPI Transaction ID</label>
+      <input type="text" id="upiTxnId" placeholder="e.g. 407311234567" style="margin-top:6px"/>
+      <div id="upiSuccessMsg" style="display:none;margin-top:8px;color:#1a7a55;font-size:.83rem;font-weight:600;background:#d4f5e9;padding:8px 12px;border-radius:8px">✅ Transaction submitted!</div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px"><button class="btn btn-success" style="flex:2" onclick="submitUpiTxn()">✅ Submit & Mark Paid</button><button class="btn btn-outline" style="flex:1" onclick="closeModal('upiQrModal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Bed Modal -->
+<div class="modal-overlay" id="bedModal">
+  <div class="modal" style="max-width:400px">
+    <button class="modal-close" onclick="closeModal('bedModal')">✕</button>
+    <div class="modal-title" id="bedModalTitle">Manage Bed</div>
+    <div class="form-group" style="margin-bottom:14px"><label>Status</label><select id="bed-status-select"><option value="available">Available</option><option value="occupied">Occupied</option><option value="maintenance">Maintenance</option></select></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Patient (if occupied)</label><select id="bed-patient-select"></select></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Ward</label><input type="text" id="bed-ward-input"/></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveBedStatus()">Save</button><button class="btn btn-outline" onclick="closeModal('bedModal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Patient ID Card Modal -->
+<div class="modal-overlay" id="idCardModal">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('idCardModal')">✕</button>
+    <div class="modal-title">🪪 Patient ID Card</div>
+    <div id="idCardContainer"></div>
+    <div class="btn-row" style="justify-content:center;margin-top:16px"><button class="btn btn-primary" onclick="printIdCard()">🖨️ Print Card</button><button class="btn btn-outline" onclick="closeModal('idCardModal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Lab Result Modal -->
+<div class="modal-overlay" id="labResultModal">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('labResultModal')">✕</button>
+    <div class="modal-title">📋 Upload Lab Result</div>
+    <div class="form-group" style="margin-bottom:14px"><label>Result Summary</label><textarea id="lab-result-text" rows="4" placeholder="Enter test results…"></textarea></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Reference Range / Notes</label><input type="text" id="lab-result-ref" placeholder="e.g. Normal: 70-100 mg/dL"/></div>
+    <div class="btn-row"><button class="btn btn-success" onclick="saveLabResult()">✅ Save Result</button><button class="btn btn-outline" onclick="closeModal('labResultModal')">Cancel</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+  <!-- MedEase Application Script -->
+  <script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+NOTE: This project uses a single HTML file (index.html) which contains
+all HTML, CSS and JavaScript together.
+
+This is the standard approach for simple college projects.
+The file includes:
+  - All HTML structure
+  - All CSS styles (inside <style> tag)
+  - All JavaScript logic (inside <script> tag)
+  - Charts, QR code, AI chatbot all built in
+
+To view: Just double-click index.html or open in any browser.
