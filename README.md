@@ -37,7 +37,7 @@
 
 ## 📌 About the Project
 
-**MedEase** is a comprehensive Hospital Management System built as a Final Year College Project. It provides a unified digital platform for managing patient services and hospital financial operations.
+**MedEase** is a comprehensive Hospital Management System built as a Second Year College Project. It provides a unified digital platform for managing patient services and hospital financial operations.
 
 ### Patient Services
 - Self-registration with unique Patient ID
