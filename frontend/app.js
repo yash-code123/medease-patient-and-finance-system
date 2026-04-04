@@ -6,7 +6,7 @@
 /* ═══════════════════════════════════════════════
    API CONFIGURATION
 ═══════════════════════════════════════════════ */
-const API_BASE = 'https://medease-backend-production.up.railway.app/api';
+const API_BASE = 'https://medease-backend.onrender.com/api';
 let _authToken = null;
 
 async function apiCall(endpoint, method='GET', body=null){
