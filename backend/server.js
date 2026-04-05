@@ -29,6 +29,16 @@ app.use('/api/billing',       require('./routes/billing'));
 app.use('/api/pharmacy',      require('./routes/pharmacy'));
 app.use('/api/beds',          require('./routes/beds'));
 
+// ── TEMPORARY SEED ROUTE - remove after seeding ──────
+app.get('/seed-now', async (req, res) => {
+  try {
+    await require('./utils/seedData')();
+    res.json({ message: '✅ Seed complete!' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── 404 handler ──────────────────────────────────────
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
 
