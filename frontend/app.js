@@ -6,7 +6,7 @@
 /* ═══════════════════════════════════════════════
    API CONFIGURATION
 ═══════════════════════════════════════════════ */
-const API_BASE = 'https://medease-backend.onrender.com/api';
+const API_BASE = 'https://medease-patient-and-finance-system.onrender.com/api';
 let _authToken = null;
 
 async function apiCall(endpoint, method='GET', body=null){
