@@ -10,7 +10,8 @@
 *A full-stack web application that digitizes the complete hospital workflow — from patient registration and appointment booking to doctor consultation, financial tracking and real-time analytics.*
 
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-medease--hospital--management--system.netlify.app-1a3a5c?style=for-the-badge)](https://medease-hospital-management-system.netlify.app)
-[![API](https://img.shields.io/badge/⚙️%20Backend%20API-Railway-e8613a?style=for-the-badge)](https://medease-backend-production.up.railway.app)
+[![API](https://img.shields.io/badge/⚙️%20Backend%20API-Render-e8613a?style=for-the-badge)](https://medease-backend.onrender.com)
+[![DB](https://img.shields.io/badge/🗄️%20Database-Aiven%20MySQL-2d9e6b?style=for-the-badge)](https://aiven.io)
 
 </div>
 
@@ -30,14 +31,13 @@
 - [Getting Started](#-getting-started)
 - [Deployment](#-deployment)
 - [Demo Credentials](#-demo-credentials)
-- [Screenshots](#-screenshots)
 - [Developer](#-developer)
 
 ---
 
 ## 📌 About the Project
 
-**MedEase** is a comprehensive Hospital Management System built as a Second Year College Project. It provides a unified digital platform for managing patient services and hospital financial operations.
+**MedEase** is a comprehensive Hospital Management System built as a Final Year College Project. It provides a unified digital platform for managing patient services and hospital financial operations.
 
 ### Patient Services
 - Self-registration with unique Patient ID
@@ -59,11 +59,13 @@
 
 ## 🌐 Live Demo
 
-| Service | URL |
-|---------|-----|
-| 🌐 Frontend (Netlify) | https://medease-hospital-management-system.netlify.app |
-| ⚙️ Backend API (Railway) | https://medease-backend-production.up.railway.app |
-| 🗄️ Database | MySQL on Railway Cloud |
+| Service | Platform | URL | Status |
+|---------|----------|-----|--------|
+| 🌐 Frontend | Netlify | https://medease-hospital-management-system.netlify.app | ✅ Live |
+| ⚙️ Backend API | Render | https://medease-backend.onrender.com | ✅ Live |
+| 🗄️ Database | Aiven MySQL | Cloud hosted — always on | ✅ Live |
+
+> **Note:** Backend is hosted on Render free tier. First request after inactivity may take ~30 seconds to wake up. Subsequent requests are instant.
 
 ---
 
@@ -97,7 +99,7 @@
 
 ### 🔑 Admin Module
 - ✅ Full hospital dashboard with 8 stat cards
-- ✅ Add/manage doctors with auto-generated login credentials
+- ✅ Add/manage doctors with custom or auto-generated login credentials
 - ✅ Patient registration and records management
 - ✅ Queue and token management
 - ✅ Bed management — 30 beds across 3 wards
@@ -130,12 +132,12 @@
 | cors | Cross-Origin Requests |
 
 ### Database & Hosting
-| Service | Purpose |
-|---------|---------|
-| MySQL 8 | Relational Database |
-| Railway.app | Backend + Database Hosting |
-| Netlify | Frontend Hosting |
-| GitHub | Version Control & Auto-Deploy |
+| Service | Purpose | Plan |
+|---------|---------|------|
+| Aiven MySQL | Cloud Relational Database | Free — always on |
+| Render.com | Backend Node.js Hosting | Free — auto-deploy |
+| Netlify | Frontend Hosting | Free — global CDN |
+| GitHub | Version Control & CI/CD | Free |
 
 ---
 
@@ -151,7 +153,7 @@
                        ▼
 ┌─────────────────────────────────────────────────────────┐
 │                  EXPRESS SERVER                          │
-│     medease-backend-production.up.railway.app:5000      │
+│           medease-backend.onrender.com                  │
 │                                                         │
 │  /api/auth  /api/patients  /api/appointments            │
 │  /api/tokens  /api/prescriptions  /api/lab              │
@@ -160,8 +162,8 @@
                        │ Sequelize ORM — SQL Queries
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│                 MYSQL DATABASE                           │
-│      Railway Cloud — mainline.proxy.rlwy.net:14044      │
+│               AIVEN MYSQL DATABASE                       │
+│         Cloud Hosted — Free Tier — Always On            │
 │                                                         │
 │  users │ patients │ doctors │ appointments │ tokens     │
 │  prescriptions │ lab_orders │ bills │ medicines │ beds  │
@@ -176,11 +178,17 @@ Developer (Local)
       ▼
 GitHub Repository
       │
-      │  Auto-deploy trigger
+      ├──────────────────────────────────────┐
+      │  Auto-deploy trigger (webhook)       │
+      ▼                                      ▼
+Render.com (Backend)               Netlify (Frontend)
+medease-backend.onrender.com       medease-hospital-management
+Node.js + Express.js               -system.netlify.app
+      │
+      │  Sequelize ORM
       ▼
-Railway.app (Backend + MySQL)          Netlify (Frontend)
-medease-backend-production             medease-hospital-management
-.up.railway.app                        -system.netlify.app
+Aiven MySQL (Database)
+Always on — free cloud MySQL
 ```
 
 ---
@@ -202,14 +210,14 @@ medease-backend-production             medease-hospital-management
 
 ### Relationships
 ```
-users.ref_id          ──→  patients.id / doctors.id
-appointments.patient_id ──→  patients.id
-appointments.doctor_id  ──→  doctors.id
-tokens.appointment_id   ──→  appointments.id
-prescriptions.patient_id ──→ patients.id
-lab_orders.patient_id   ──→  patients.id
-bills.appointment_id    ──→  appointments.id
-beds.patient_id         ──→  patients.id
+users.ref_id             ──→  patients.id / doctors.id
+appointments.patient_id  ──→  patients.id
+appointments.doctor_id   ──→  doctors.id
+tokens.appointment_id    ──→  appointments.id
+prescriptions.patient_id ──→  patients.id
+lab_orders.patient_id    ──→  patients.id
+bills.appointment_id     ──→  appointments.id
+beds.patient_id          ──→  patients.id
 ```
 
 ---
@@ -315,7 +323,7 @@ medease-patient-and-finance-system/
 
 ### Prerequisites
 - Node.js v18+
-- MySQL 8 (or Railway MySQL account)
+- MySQL 8 (or Aiven free MySQL account)
 - Git
 
 ### 1. Clone the Repository
@@ -332,13 +340,13 @@ cp .env.example .env
 ```
 
 ### 3. Configure Environment Variables
-Edit `.env` file:
+Edit your `.env` file with Aiven MySQL credentials:
 ```env
-DB_HOST      = your_mysql_host
-DB_PORT      = 3306
-DB_NAME      = railway
-DB_USER      = root
-DB_PASS      = your_mysql_password
+DB_HOST      = your_aiven_host
+DB_PORT      = your_aiven_port
+DB_NAME      = your_aiven_database
+DB_USER      = your_aiven_username
+DB_PASS      = your_aiven_password
 JWT_SECRET   = medease_secret_2024
 PORT         = 5000
 NODE_ENV     = development
@@ -366,24 +374,31 @@ npm start
 
 ## ☁️ Deployment
 
-### Frontend → Netlify
+### Frontend → Netlify (Free)
 1. Go to [netlify.com](https://netlify.com)
 2. Drag and drop the `frontend` folder
-3. Done ✅ — get free URL instantly
+3. Done ✅ — live URL in 30 seconds with free SSL
 
-### Backend → Railway
-1. Go to [railway.app](https://railway.app)
-2. New Project → Deploy from GitHub
-3. Select this repository
-4. Add environment variables in Railway dashboard
-5. Generate domain in Settings → Networking
-6. Done ✅ — auto-deploys on every git push
+### Backend → Render (Free Forever)
+1. Go to [render.com](https://render.com)
+2. Sign up with GitHub
+3. New → **Web Service** → Connect your repo
+4. Settings:
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Root Directory:** `backend`
+5. Add Environment Variables (all from `.env`)
+6. Deploy ✅ — auto-deploys on every git push
 
-### Database → Railway MySQL
-1. New Project → Add MySQL
-2. Copy credentials from Variables tab
-3. Add to backend `.env` file
-4. Run `npm run seed` to initialize tables
+> **Tip:** Use [UptimeRobot](https://uptimerobot.com) (free) to ping your Render URL every 14 minutes to prevent sleep.
+
+### Database → Aiven MySQL (Free Forever)
+1. Go to [aiven.io](https://aiven.io)
+2. Create account → New Service → **MySQL**
+3. Select **Free plan** → Choose region
+4. Copy connection credentials from service dashboard
+5. Add credentials to Render environment variables
+6. Run `npm run seed` to initialize all tables ✅
 
 ---
 
@@ -422,6 +437,6 @@ This project is licensed under the MIT License.
 
 **⭐ If you found this project helpful, please give it a star! ⭐**
 
-Made by Yash Bhirud | Second Year College Project 2025-2026
+Made with ❤️ by Yash Bhirud | Final Year College Project 2025-2026
 
 </div>
